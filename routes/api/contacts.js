@@ -1,4 +1,5 @@
 const express = require("express");
+const ctrlContacts = require("../../controller");
 
 const {
   listContacts,
@@ -15,17 +16,12 @@ const {
 
 const router = express.Router();
 
-router.get("/", async (req, res, next) => {
-  const data = await listContacts();
-
-  res.status(200).json({
-    contacts: data,
-  });
-});
+router.get("/", ctrlContacts.get);
 
 router.get("/:contactId", async (req, res, next) => {
   const { contactId } = req.params;
   const data = await getContactById(contactId);
+  // const data = await service.getAllContacts();
 
   if (!data) {
     return res.status(404).json({ message: "Not found" });
