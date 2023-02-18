@@ -21,4 +21,5 @@ connection
   })
   .catch((err) => {
     console.log(`Server not running. Error message: ${err.message}`);
+    process.exit(1);
   });

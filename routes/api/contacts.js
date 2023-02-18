@@ -18,68 +18,14 @@ const router = express.Router();
 
 router.get("/", ctrlContacts.get);
 
-router.get("/:contactId", async (req, res, next) => {
-  const { contactId } = req.params;
-  const data = await getContactById(contactId);
-  // const data = await service.getAllContacts();
+router.get("/:contactId", ctrlContacts.getById);
 
-  if (!data) {
-    return res.status(404).json({ message: "Not found" });
-  }
-  return res.status(200).json({ contact: data });
-});
+router.post("/", ctrlContacts.postContact);
 
-router.post("/", async (req, res, next) => {
-  const validateData = await validatePost(req.body);
+router.delete("/:contactId", ctrlContacts.remove);
 
-  const errValidate = validateData.error;
+router.put("/:contactId", ctrlContacts.put);
 
-  if (errValidate) {
-    const err = errValidate.details[0].message;
-    return res
-      .status(400)
-      .json({ message: `missing ${err.replaceAll('"', "")} field` });
-  }
-
-  const result = await addContact(req.body);
-
-  res.status(200).json({ message: result });
-});
-
-router.delete("/:contactId", async (req, res, next) => {
-  const { contactId } = req.params;
-
-  const data = await removeContact(contactId);
-
-  if (!data) {
-    return res.status(404).json({ message: "Not found" });
-  }
-  return res.status(200).json({ contact: "Contact delete" });
-});
-
-router.put("/:contactId", async (req, res, next) => {
-  const { contactId } = req.params;
-
-  if (!Object.keys(req.body).length) {
-    res.status(400).json({ message: "missing fields" });
-    return;
-  }
-
-  const validateData = await validatePut(req.body);
-
-  const errValidate = validateData.error;
-
-  if (errValidate) {
-    return res.status(400).json({ message: "missing fields" });
-  }
-
-  const data = await updateContact(contactId, req.body);
-
-  if (!data) {
-    res.status(404).json({ message: "Not found" });
-  }
-
-  res.json({ contact: data });
-});
+router.patch("/:contactId/favorite", ctrlContacts.patchFavorite);
 
 module.exports = router;
