@@ -1,12 +1,32 @@
-const service = require("../service");
-// const { getContactById } = require("../models/contacts");
+const service = require("../service/contacts");
 
 const get = async (req, res, next) => {
-  try {
-    const data = await service.getAllContacts();
-    console.log(data);
+  const { _id } = req.user;
+  const { page, limit, favorite } = req.query;
 
-    res.status(200).json({
+  try {
+    if (favorite) {
+      const dataFovorite = await service.getFavorite(_id, favorite);
+
+      if (dataFovorite.message) {
+        return res.status(400).json({ dataFovorite });
+      }
+
+      return res.status(200).json({
+        contacts: dataFovorite,
+      });
+    }
+  } catch (err) {
+    return res.status(400).json({ message: err.message });
+  }
+
+  try {
+    const data = await service.getAllContacts(_id, page, limit);
+
+    if (data.message) {
+      return res.status(400).json({ data });
+    }
+    return res.status(200).json({
       contacts: data,
     });
   } catch (err) {
@@ -16,8 +36,10 @@ const get = async (req, res, next) => {
 };
 
 const getById = async (req, res, next) => {
+  const { _id } = req.user;
   const { contactId } = req.params;
-  const data = await service.getContactById(contactId);
+
+  const data = await service.getContactById(_id, contactId);
 
   if (!data) {
     return res.status(404).json({ message: "Not found" });
@@ -26,10 +48,11 @@ const getById = async (req, res, next) => {
 };
 
 const postContact = async (req, res, next) => {
-  const { name, email, phone } = req.body;
+  const { _id } = req.user;
+  const { name, email, phone, favorite } = req.body;
 
   try {
-    const data = await service.createContact(name, email, phone);
+    const data = await service.createContact(_id, name, email, phone, favorite);
     res.status(200).json({ message: data });
   } catch (err) {
     res.status(400).json({ message: err.message });
@@ -37,9 +60,11 @@ const postContact = async (req, res, next) => {
 };
 
 const remove = async (req, res, next) => {
+  const { _id } = req.user;
+
   const { contactId } = req.params;
 
-  const data = await service.removeContacts(contactId);
+  const data = await service.removeContacts(_id, contactId);
 
   if (!data) {
     return res.status(404).json({ message: "Not found" });
@@ -48,6 +73,8 @@ const remove = async (req, res, next) => {
 };
 
 const put = async (req, res, next) => {
+  const { _id } = req.user;
+
   const { contactId } = req.params;
 
   if (!Object.keys(req.body).length) {
@@ -55,7 +82,7 @@ const put = async (req, res, next) => {
   }
 
   try {
-    const data = await service.updateContact(contactId, req.body);
+    const data = await service.updateContact(_id, contactId, req.body);
     res.status(200).json({ contact: data });
   } catch (error) {
     res.status(404).json({ message: "Not found" });
@@ -63,6 +90,8 @@ const put = async (req, res, next) => {
 };
 
 const patchFavorite = async (req, res, next) => {
+  const { _id } = req.user;
+
   const { contactId } = req.params;
 
   if (!Object.keys(req.body).length) {
@@ -70,7 +99,7 @@ const patchFavorite = async (req, res, next) => {
   }
 
   try {
-    const data = await service.updateContact(contactId, req.body);
+    const data = await service.updateContact(_id, contactId, req.body);
 
     res.status(200).json({ contact: data });
   } catch (err) {

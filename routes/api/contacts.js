@@ -1,20 +1,9 @@
 const express = require("express");
-const ctrlContacts = require("../../controller");
-
-const {
-  listContacts,
-  getContactById,
-  removeContact,
-  addContact,
-  updateContact,
-} = require("./../../models/contacts.js");
-
-const {
-  validatePost,
-  validatePut,
-} = require("./../../helpers/validateBody.js");
-
+const ctrlContacts = require("../../controller/contacts");
+const { validationUserToken } = require("../../middlewares/userAuthorazed");
 const router = express.Router();
+
+router.use(validationUserToken);
 
 router.get("/", ctrlContacts.get);
 
