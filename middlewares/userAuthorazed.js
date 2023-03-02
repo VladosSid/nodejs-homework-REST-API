@@ -4,6 +4,10 @@ const User = require("../service/schemas/users");
 const SECRET = process.env.SECRET;
 
 const validationUserToken = async (req, res, next) => {
+  if (!req.headers.authorization) {
+    return res.status(401).json({ message: "Not authorized" });
+  }
+
   const [tokenType, token] = req.headers.authorization.split(" ");
   if (!token || tokenType !== "Bearer") {
     return res.status(401).json({ message: "Not authorized" });

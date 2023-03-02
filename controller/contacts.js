@@ -2,26 +2,33 @@ const service = require("../service/contacts");
 
 const get = async (req, res, next) => {
   const { _id } = req.user;
-  const { page, limit, favorite } = req.query;
+  const { page, limit, favorite, email, name } = req.query;
+
+  // try {
+  //   if (!favorite) {
+  //     const dataFovorite = await service.getFavorite(_id, favorite);
+
+  //     if (dataFovorite.message) {
+  //       return res.status(400).json({ dataFovorite });
+  //     }
+
+  //     return res.status(200).json({
+  //       contacts: dataFovorite,
+  //     });
+  //   }
+  // } catch (err) {
+  //   return res.status(400).json({ message: err.message });
+  // }
 
   try {
-    if (favorite) {
-      const dataFovorite = await service.getFavorite(_id, favorite);
-
-      if (dataFovorite.message) {
-        return res.status(400).json({ dataFovorite });
-      }
-
-      return res.status(200).json({
-        contacts: dataFovorite,
-      });
-    }
-  } catch (err) {
-    return res.status(400).json({ message: err.message });
-  }
-
-  try {
-    const data = await service.getAllContacts(_id, page, limit);
+    const data = await service.getAllContacts(
+      _id,
+      favorite,
+      email,
+      name,
+      page,
+      limit
+    );
 
     if (data.message) {
       return res.status(400).json({ data });

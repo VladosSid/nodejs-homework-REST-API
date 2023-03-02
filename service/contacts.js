@@ -1,20 +1,15 @@
 const Contact = require("./schemas/contact");
-const { pagination } = require("../helpers/paginationContacts");
 
-const getAllContacts = async (userId, page, limit) => {
-  const contacts = await Contact.find({ owner: userId });
+const getAllContacts = async (userId, favorite, email, name, page, limit) => {
+  let query = {
+    owner: userId,
+  };
 
-  if (page) {
-    const paginationContacts = await pagination(contacts, page, limit);
+  query = email ? { ...query, email } : query;
+  query = favorite !== undefined ? { ...query, favorite } : query;
+  query = name ? { ...query, name } : query;
 
-    if (paginationContacts.message) {
-      return paginationContacts;
-    }
-
-    return paginationContacts;
-  }
-
-  return contacts;
+  return await Contact.find(query).skip(page).limit(limit);
 };
 
 const getContactById = (userId, id) => {
@@ -35,8 +30,16 @@ const updateContact = (userId, id, data) => {
   });
 };
 
-const getFavorite = (userId, favorite) => {
-  return Contact.find({ owner: userId, favorite: favorite });
+const getFavorite = (
+  userId,
+  favoriteValue = false,
+  email = "nec@Nulla.com",
+  name = "Thomas Lucas"
+) => {
+  console.log(query);
+
+  console.log(12343142354);
+  return Contact.find(query);
 };
 
 module.exports = {
