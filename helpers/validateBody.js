@@ -24,7 +24,18 @@ async function validatePut(data) {
   return validate;
 }
 
+async function validateUser(email, password) {
+  const schema = Joi.object({
+    email: Joi.string().email().required(),
+    password: Joi.string().min(6).required(),
+  });
+
+  const validate = await schema.validate({ email, password });
+  return validate;
+}
+
 module.exports = {
   validatePost,
   validatePut,
+  validateUser,
 };
