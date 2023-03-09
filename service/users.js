@@ -1,5 +1,6 @@
 const User = require("./schemas/users");
 const jwt = require("jsonwebtoken");
+const gravatar = require("gravatar");
 
 const SECRET = process.env.SECRET;
 
@@ -14,7 +15,11 @@ const singup = async (email, password) => {
   }
 
   try {
-    const newUser = new User({ email, password });
+    const newUser = new User({
+      email,
+      password,
+      avatarURL: gravatar.url(email),
+    });
     newUser.setPassword(password);
 
     return User.create(newUser);
@@ -50,10 +55,23 @@ const logout = async (userId) => {
 };
 
 const subscription = async (userId, subscription) => {
-  const data = await User.findByIdAndUpdate(userId, { subscription });
+  return await User.findByIdAndUpdate(userId, { subscription }, { new: true });
+};
 
-  const user = await User.findById(userId);
-  return user;
+const updateAvatar = async (userId, urlAvatar) => {
+  const data = await User.findByIdAndUpdate(
+    userId,
+    {
+      avatarURL: `http://localhost:3000/static/avatars/avataruser-${urlAvatar}.jpg`,
+    },
+    {
+      new: true,
+    }
+  );
+
+  // console.log(data);
+
+  return data;
 };
 
 module.exports = {
@@ -61,4 +79,5 @@ module.exports = {
   login,
   logout,
   subscription,
+  updateAvatar,
 };
