@@ -1,5 +1,6 @@
 const service = require("../service/users");
 const { validateUser } = require("../helpers/validateBody");
+const { updateAvatar } = require("../middlewares/refactorAvatar");
 
 const singup = async (req, res, next) => {
   const { email, password } = req.body;
@@ -7,7 +8,7 @@ const singup = async (req, res, next) => {
   try {
     // validate data req
     const validateData = await validateUser(email, password);
-
+    // console.log(validateData);
     const errValidate = validateData.error;
     if (errValidate) {
       const err = errValidate.details[0].message;
@@ -156,10 +157,39 @@ const updateSubscription = async (req, res, next) => {
   } catch (error) {}
 };
 
+const avatarUser = async (req, res, next) => {
+  // const { description } = req.body;
+  const { _id } = req.user;
+  const { path } = req.file;
+
+  try {
+    updateAvatar(path, req.user.id);
+
+    const data = await service.updateAvatar(_id, req.user.id);
+
+    res.status(200).json({
+      status: "success",
+      code: 200,
+      message: "Avatar update",
+      data: {
+        email: data.email,
+        subscription: data.subscription,
+        avatarURL: data.avatarURL,
+      },
+    });
+  } catch (err) {
+    console.log(err);
+    res
+      .status(401)
+      .json({ status: "error", code: 401, message: "Not 123 authorized" });
+  }
+};
+
 module.exports = {
   singup,
   login,
   logout,
   current,
   updateSubscription,
+  avatarUser,
 };
