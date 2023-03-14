@@ -1,6 +1,7 @@
 const service = require("../service/users");
-const { validateUser } = require("../helpers/validateBody");
+const { validateUser, validatePut } = require("../helpers/validateBody");
 const { updateAvatar } = require("../middlewares/refactorAvatar");
+const sendEmailVerifi = require("../middlewares/sendEmailVerifyuser");
 
 const singup = async (req, res, next) => {
   const { email, password } = req.body;
@@ -8,7 +9,7 @@ const singup = async (req, res, next) => {
   try {
     // validate data req
     const validateData = await validateUser(email, password);
-    // console.log(validateData);
+
     const errValidate = validateData.error;
     if (errValidate) {
       const err = errValidate.details[0].message;
@@ -32,6 +33,8 @@ const singup = async (req, res, next) => {
       });
     }
 
+    sendEmailVerifi(data.email, data.verificationToken);
+
     return res.status(201).json({
       user: {
         status: "created",
@@ -42,8 +45,82 @@ const singup = async (req, res, next) => {
     });
   } catch (err) {
     return res
-      .status(400)
-      .json({ status: "error", code: 400, message: err.message });
+      .status(404)
+      .json({ status: "error", code: 404, message: err.message });
+  }
+};
+
+const verifiEmailToken = async (req, res, next) => {
+  try {
+    const data = await service.verifiEmail(req.params.verificationToken);
+
+    if (data === null) {
+      res.status(404).json({
+        status: "error",
+        code: 404,
+        message: "User not found",
+      });
+    }
+
+    res.status(200).json({
+      status: "success",
+      code: 200,
+      message: "Email verify",
+    });
+  } catch (err) {
+    res.status(404).json({
+      status: "error",
+      code: 404,
+      message: err.message,
+    });
+  }
+};
+
+const verify = async (req, res, next) => {
+  const email = req.body.email;
+  try {
+    if (!email) {
+      res.status(400).json({
+        status: "error",
+        code: 400,
+        message: "missing required field email",
+      });
+    }
+
+    const validateData = await validatePut({ email });
+
+    const errValidate = validateData.error;
+    if (errValidate) {
+      const err = errValidate.details[0].message;
+      return res.status(400).json({
+        status: "error",
+        code: 400,
+        message: err.replaceAll('"', ""),
+        data: err.replaceAll('"', ""),
+      });
+    }
+
+    const data = await service.verifi(email);
+
+    if (data.verify) {
+      res.status(400).json({
+        status: "error",
+        code: 400,
+        message: "Verification has already been passed",
+      });
+    }
+
+    sendEmailVerifi(data.email, data.verificationToken);
+
+    res.status(200).json({
+      status: "success",
+      code: 200,
+      message: "Verification email sent",
+    });
+  } catch (err) {
+    return res
+      .status(404)
+      .json({ status: "error", code: 404, message: err.message });
   }
 };
 
@@ -74,6 +151,15 @@ const login = async (req, res, next) => {
         code: 401,
         message: "Email or password is wrong",
         data: "",
+      });
+    }
+
+    if (data.verify) {
+      return res.status(401).json({
+        status: "error",
+        code: 401,
+        message: "User not verification",
+        data: data.verify,
       });
     }
 
@@ -187,6 +273,8 @@ const avatarUser = async (req, res, next) => {
 
 module.exports = {
   singup,
+  verifiEmailToken,
+  verify,
   login,
   logout,
   current,

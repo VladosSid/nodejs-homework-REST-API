@@ -27,6 +27,10 @@ const upload = multer({
 
 router.post("/singup", ctrlUsers.singup);
 
+router.get("/auth/verify/:verificationToken", ctrlUsers.verifiEmailToken);
+
+router.post("/verify", ctrlUsers.verify);
+
 router.post("/login", ctrlUsers.login);
 
 router.get("/logout", validationUserToken, ctrlUsers.logout);
