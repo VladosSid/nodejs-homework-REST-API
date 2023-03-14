@@ -1,6 +1,7 @@
 const User = require("./schemas/users");
 const jwt = require("jsonwebtoken");
 const gravatar = require("gravatar");
+const { v4: uuidv4 } = require("uuid");
 
 const SECRET = process.env.SECRET;
 
@@ -19,6 +20,7 @@ const singup = async (email, password) => {
       email,
       password,
       avatarURL: gravatar.url(email),
+      verificationToken: uuidv4(),
     });
     newUser.setPassword(password);
 
@@ -28,11 +30,33 @@ const singup = async (email, password) => {
   }
 };
 
+const verifiEmail = async (verificationToken) => {
+  return await User.findOneAndUpdate(
+    { verificationToken },
+    {
+      verify: true,
+      verificationToken: null,
+    },
+    { new: true }
+  );
+};
+
+const verifi = async (email) => {
+  return await findUser(email);
+};
+
 const login = async (email, password) => {
   const checkoutUser = await findUser(email);
 
   if (!checkoutUser || !checkoutUser.validPassword(password)) {
     return null;
+  }
+
+  if (!checkoutUser.verify) {
+    return {
+      verify:
+        "Confirm your registration, you have been sent a notification to the e-mail address specified during registration. To resend the letter, follow the link: http://localhost:3000/api/user/verify",
+    };
   }
 
   const payload = {
@@ -76,6 +100,8 @@ const updateAvatar = async (userId, urlAvatar) => {
 
 module.exports = {
   singup,
+  verifiEmail,
+  verifi,
   login,
   logout,
   subscription,
